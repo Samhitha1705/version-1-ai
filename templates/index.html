@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NutriSense Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div id="chat-toggle">💬</div>
+
+<div id="chat-container">
+    <div id="chat-header">
+        <span>NutriSense</span>
+        <button id="close-chat">✕</button>
+    </div>
+
+    <div id="chat-body">
+        <div class="bot-message">
+            👋 Welcome! I can help you understand food, nutrition, and healthy eating habits.
+        </div>
+    </div>
+
+    <div id="quick-buttons">
+        <button onclick="sendQuick('Protein')">Protein</button>
+        <button onclick="sendQuick('BMI')">BMI</button>
+        <button onclick="sendQuick('Breakfast')">Breakfast</button>
+        <button onclick="sendQuick('Diet Tips')">Diet Tips</button>
+        <button onclick="sendQuick('Water')">Water</button>
+        <button onclick="sendQuick('Myth')">Myth</button>
+        <button onclick="sendQuick('Booking')">Booking</button>
+        <button onclick="sendQuick('Help')">Help</button>
+    </div>
+
+    <div id="chat-input">
+        <input type="text" id="user-input" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
