@@ -1,90 +1,86 @@
-const chatToggle = document.getElementById("chat-toggle");
+const toggleBtn = document.getElementById("chat-toggle");
 const chatContainer = document.getElementById("chat-container");
-const closeChat = document.getElementById("close-chat");
+const closeBtn = document.getElementById("close-chat");
+const input = document.getElementById("user-input");
 const chatBody = document.getElementById("chat-body");
-const inputField = document.getElementById("user-input");
-
-chatToggle.addEventListener("click", () => {
-    chatContainer.style.display = "flex";
-    setTimeout(() => inputField.focus(), 100);
-});
-
-closeChat.addEventListener("click", () => {
-    chatContainer.style.display = "none";
-});
-
-function addBotMessage(msg, isHTML = false) {
-    const formatted = isHTML ? msg : msg.replace(/\n/g, "<br>");
-    chatBody.innerHTML += `<div class="bot-message">${formatted}</div>`;
-    chatBody.scrollTop = chatBody.scrollHeight;
-    inputField.focus();
-}
-
-function addUserMessage(msg) {
+ 
+toggleBtn.onclick = () => { chatContainer.style.display = "flex"; input.focus(); };
+closeBtn.onclick = () => { chatContainer.style.display = "none"; };
+ 
+function appendUser(msg) {
     chatBody.innerHTML += `<div class="user-message">${msg}</div>`;
     chatBody.scrollTop = chatBody.scrollHeight;
 }
-
-// Send message
+ 
+function appendBot(msg) {
+    chatBody.innerHTML += `<div class="bot-message">${msg.replace(/\n/g, "<br>")}</div>`;
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+ 
 function sendMessage() {
-    const msg = inputField.value.trim();
+    const msg = input.value.trim();
     if (!msg) return;
-    addUserMessage(msg);
-    inputField.value = "";
-
+    appendUser(msg);
+    input.value = "";
+ 
     fetch("/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: msg})
     })
     .then(res => res.json())
-    .then(data => addBotMessage(data.reply));
+    .then(data => handleBotResponse(data.reply));
 }
-
-// Quick buttons
-function sendQuick(msg) {
-    addUserMessage(msg);
-
-    if (msg.toLowerCase() === "booking") {
-        const dateHTML = `
-            📅 Please select a <strong>date (YYYY-MM-DD)</strong>:
-            <input type="date" id="booking-date"/>
-            <input type="time" id="booking-time"/>
-            <button onclick="confirmBooking()">Confirm</button>
+ 
+function sendQuick(text) {
+    appendUser(text);
+    fetch("/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({message: text})
+    })
+    .then(res => res.json())
+    .then(data => handleBotResponse(data.reply));
+}
+ 
+function handleBotResponse(msg) {
+    if (msg.includes("Please select a **date**")) {
+        chatBody.innerHTML += `<div class="bot-message">${msg.replace(/\n/g,"<br>")}</div>`;
+        chatBody.innerHTML += `
+            <div class="user-message">
+                <input type="date" id="booking-date" />
+                <button onclick="sendDate()">Submit Date</button>
+            </div>
         `;
-        addBotMessage(dateHTML, true);
-        return;
+    } else if (msg.includes("Enter a **time")) {
+        chatBody.innerHTML += `<div class="bot-message">${msg.replace(/\n/g,"<br>")}</div>`;
+        chatBody.innerHTML += `
+            <div class="user-message">
+                <input type="time" id="booking-time" />
+                <button onclick="sendTime()">Submit Time</button>
+            </div>
+        `;
+    } else {
+        appendBot(msg);
     }
-
-    fetch("/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg })
-    })
-    .then(res => res.json())
-    .then(data => addBotMessage(data.reply));
+    chatBody.scrollTop = chatBody.scrollHeight;
 }
-
-// Confirm booking
-function confirmBooking() {
-    const date = document.getElementById("booking-date").value;
-    const time = document.getElementById("booking-time").value;
-
-    if (!date || !time) {
-        alert("Please select both date and time!");
-        return;
-    }
-
-    addBotMessage(`
-        ✅ Your consultation is booked on <strong>${date}</strong> at <strong>${time} IST</strong>.<br>
-        For support: support@nutrisense.com
-    `, true);
+ 
+function sendDate() {
+    const dateInput = document.getElementById("booking-date");
+    if (!dateInput.value) return alert("Please select a date.");
+    sendQuick(dateInput.value);
 }
-
-// ENTER key support
-inputField.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
+ 
+function sendTime() {
+    const timeInput = document.getElementById("booking-time");
+    if (!timeInput.value) return alert("Please select time.");
+    sendQuick(timeInput.value);
+}
+ 
+// Enter key support
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); sendMessage(); }
 });
+ 
+ 
